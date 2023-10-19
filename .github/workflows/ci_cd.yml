@@ -38,15 +38,17 @@ jobs:
         GOOS=darwin GOARCH=amd64 go build -o build/hash-detect-darwin-amd64
         GOOS=windows GOARCH=amd64 go build -o build/hash-detect-windows-amd64.exe
 
-    - name: Create Release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+        - name: Create Release
+        id: create_release  # <-- Add this line for later reference
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.sha }}
+          release_name: Release-${{ github.sha }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+      
 
     - name: Upload Release Asset (Linux)
       uses: actions/upload-release-asset@v1
