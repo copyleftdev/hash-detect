@@ -19,7 +19,6 @@ git clone https://github.com/copyleftdev/hash-detect.git
 cd hash-detect
 go build
 ```
-
 ## Usage
 
 ### Single Hash Detection
