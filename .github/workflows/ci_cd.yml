@@ -1,0 +1,73 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on push to main branch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.17'  # Specify the Go version
+
+    - name: Run Tests
+      run: go test ./...
+
+  release:
+    needs: test  # Depend on the test job
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.17'
+
+    - name: Build Executables
+      run: |
+        GOOS=linux GOARCH=amd64 go build -o build/hash-detect-linux-amd64
+        GOOS=darwin GOARCH=amd64 go build -o build/hash-detect-darwin-amd64
+        GOOS=windows GOARCH=amd64 go build -o build/hash-detect-windows-amd64.exe
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Release Asset (Linux)
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/hash-detect-linux-amd64
+        asset_name: hash-detect-linux-amd64
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset (macOS)
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/hash-detect-darwin-amd64
+        asset_name: hash-detect-darwin-amd64
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset (Windows)
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/hash-detect-windows-amd64.exe
+        asset_name: hash-detect-windows-amd64.exe
+        asset_content_type: application/octet-stream
